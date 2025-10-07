@@ -1,0 +1,23 @@
+{
+    "text_content": "test测试。。。",
+    "opacity": 255,
+    "color": [
+        255,
+        0,
+        0
+    ],
+    "relative_font_size": 6,
+    "is_bold": true,
+    "is_italic": true,
+    "image_path": null,
+    "position_name": "左上",
+    "name_rule": "original",
+    "custom_str": "_watermarked",
+    "output_format": "PNG",
+    "jpeg_quality": 90,
+    "scale_percent": 100,
+    "wm_offset_relative": [
+        0.08671875000000001,
+        0.41953124999999997
+    ]
+}

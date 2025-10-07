@@ -5,12 +5,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QCheckBox, QComboBox, QSizePolicy, QGridLayout, QColorDialog,
     QFileDialog
 )
-from PyQt6.QtCore import Qt, pyqtSignal # <--- 1. 导入 pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
 
 
 class Controls(QWidget):
-    # 2. 定义一个自定义信号，当任何控件的值改变时，就发射这个信号
+    # 定义一个自定义信号，当任何控件的值改变时，就发射这个信号
     settingsChanged = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -18,7 +18,7 @@ class Controls(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        # --- 创建控件 (这部分不变) ---
+        # --- 创建控件 ---
         self.layout.addWidget(QLabel("文本水印"))
         self.text_input = QLineEdit()
         self.layout.addWidget(self.text_input)
@@ -33,10 +33,10 @@ class Controls(QWidget):
         self.selected_color = (255, 255, 255)
         self.layout.addWidget(self.color_button)
 
-        self.layout.addWidget(QLabel("字号"))
+        self.layout.addWidget(QLabel("相对字号 (%)")) # <-- 1. 修改标签
         self.font_size_spin = QSpinBox()
-        self.font_size_spin.setRange(8, 200)
-        self.font_size_spin.setValue(32)
+        self.font_size_spin.setRange(1, 50)  # <-- 2. 修改范围为百分比 (1% to 50%)
+        self.font_size_spin.setValue(5)      # <-- 3. 设置一个合理的默认百分比
         self.layout.addWidget(self.font_size_spin)
 
         self.bold_checkbox = QCheckBox("粗体")
@@ -49,7 +49,20 @@ class Controls(QWidget):
         self.image_button = QPushButton("选择图片水印")
         self.image_path = None
         self.layout.addWidget(self.image_button)
-        
+
+        # --- 新增：模板UI ---
+        self.layout.addWidget(QLabel("水印模板"))
+        self.template_combo = QComboBox()
+        self.layout.addWidget(self.template_combo)
+
+        template_btn_layout = QHBoxLayout()
+        self.save_template_btn = QPushButton("保存为模板")
+        self.delete_template_btn = QPushButton("删除此模板")
+        template_btn_layout.addWidget(self.save_template_btn)
+        template_btn_layout.addWidget(self.delete_template_btn)
+        self.layout.addLayout(template_btn_layout)
+        # --- 新增结束 ---
+
         self.layout.addWidget(QLabel("水印位置"))
         self.position_buttons = {}
         self.current_position = "左上"
@@ -101,7 +114,7 @@ class Controls(QWidget):
         self.layout.addStretch()
 
         # --- 绑定内部信号 ---
-        # 3. 将所有会改变设置的控件信号，连接到自定义信号的 emit() 方法
+        # 将所有会改变设置的控件信号，连接到自定义信号的 emit() 方法
         self.text_input.textChanged.connect(self.settingsChanged.emit)
         self.opacity_slider.valueChanged.connect(self.settingsChanged.emit)
         self.font_size_spin.valueChanged.connect(self.settingsChanged.emit)
@@ -118,7 +131,7 @@ class Controls(QWidget):
         color = QColorDialog.getColor(QColor(*self.selected_color))
         if color.isValid():
             self.selected_color = (color.red(), color.green(), color.blue())
-            self.settingsChanged.emit() # 4. 只有在成功选择颜色后才发射信号
+            self.settingsChanged.emit() # 只有在成功选择颜色后才发射信号
 
     def choose_image(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -126,7 +139,7 @@ class Controls(QWidget):
         )
         if path:
             self.image_path = path
-            self.settingsChanged.emit() # 5. 只有在成功选择图片后才发射信号
+            self.settingsChanged.emit() # 只有在成功选择图片后才发射信号
 
     def set_position(self, pos_name: str):
         if self.current_position == pos_name:
@@ -134,5 +147,18 @@ class Controls(QWidget):
         self.current_position = pos_name
         for name, btn in self.position_buttons.items():
             btn.setChecked(name == pos_name)
-        # set_position 本身不发射信号，因为它是由 MainWindow 调用的
-        # MainWindow 调用后会自己更新预览
+
+    # --- 新增方法 ---
+    def update_template_list(self, templates: list[str]):
+        """更新模板下拉列表"""
+        current_selection = self.template_combo.currentText()
+        self.template_combo.blockSignals(True) # 临时阻止信号触发，避免加载时触发 on_template_selected
+        self.template_combo.clear()
+        self.template_combo.addItems(["- 选择模板 -"] + sorted(templates))
+        
+        # 尝试恢复之前的选择
+        index = self.template_combo.findText(current_selection)
+        if index != -1:
+            self.template_combo.setCurrentIndex(index)
+            
+        self.template_combo.blockSignals(False) # 恢复信号
