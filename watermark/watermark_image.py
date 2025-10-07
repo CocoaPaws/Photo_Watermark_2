@@ -64,4 +64,4 @@ class ImageWatermark:
 
         # 叠加
         base.alpha_composite(wm, position)
-        return base.convert("RGB")
+        return base

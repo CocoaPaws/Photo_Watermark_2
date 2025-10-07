@@ -1,9 +1,18 @@
 # ui/image_list.py
 
+import sys
+import os
 from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QMenu
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QIcon
 from pathlib import Path
+
+# 动态添加项目根目录到Python路径，以便能导入watermark模块
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# --- 新增：从 FileManager 导入格式列表 ---
+from watermark.file_manager import FileManager
+# --- 新增结束 ---
 
 
 class ImageList(QListWidget):
@@ -39,12 +48,16 @@ class ImageList(QListWidget):
             files = []
             for url in event.mimeData().urls():
                 f = Path(url.toLocalFile())
-                if f.is_file() and f.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]:
+                
+                # --- 修改：使用导入的格式列表进行判断 ---
+                if f.is_file() and f.suffix.lower() in FileManager.SUPPORTED_INPUT_FORMATS:
                     files.append(str(f))
                 elif f.is_dir():
                     for img in f.iterdir():
-                        if img.suffix.lower() in [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]:
+                        if img.suffix.lower() in FileManager.SUPPORTED_INPUT_FORMATS:
                             files.append(str(img))
+                # --- 修改结束 ---
+
             if self.fileDroppedCallback and files:
                 self.fileDroppedCallback(files)
             event.acceptProposedAction()
@@ -76,32 +89,17 @@ class ImageList(QListWidget):
             return item.data(Qt.ItemDataRole.UserRole)
         return None
 
-    # --- 新增：处理右键菜单 ---
     def contextMenuEvent(self, event):
         """重写此方法以响应右键点击"""
-        # 获取被右键点击的列表项
         clicked_item = self.itemAt(event.pos())
-        
-        # 如果确实点在了一个项目上
         if clicked_item:
-            # 创建一个菜单
             menu = QMenu(self)
-            
-            # 添加一个名为“删除”的动作
             delete_action = menu.addAction("删除")
-            
-            # 在鼠标光标的全局位置显示菜单，并等待用户操作
-            # exec() 会返回用户点击的那个动作
             chosen_action = menu.exec(event.globalPos())
-            
-            # 如果用户点击的是“删除”动作
             if chosen_action == delete_action:
                 self.delete_item(clicked_item)
 
     def delete_item(self, item_to_delete: QListWidgetItem):
         """从列表中删除指定的项"""
-        # 获取该项所在的行号
         row = self.row(item_to_delete)
-        # 从该行移除这个项。这个操作会自动触发 currentItemChanged 信号
         self.takeItem(row)
-    # --- 新增结束 ---

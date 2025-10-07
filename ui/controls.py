@@ -1,5 +1,7 @@
 # ui/controls.py
 
+import sys
+import os
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QSlider, QPushButton, QSpinBox,
     QHBoxLayout, QCheckBox, QComboBox, QSizePolicy, QGridLayout, QColorDialog,
@@ -7,6 +9,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
+
+# 动态添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# --- 新增：导入核心水印模块 ---
+from watermark.watermark_image import ImageWatermark
 
 
 class Controls(QWidget):
@@ -33,10 +41,10 @@ class Controls(QWidget):
         self.selected_color = (255, 255, 255)
         self.layout.addWidget(self.color_button)
 
-        self.layout.addWidget(QLabel("相对字号 (%)")) # <-- 1. 修改标签
+        self.layout.addWidget(QLabel("相对字号 (%)"))
         self.font_size_spin = QSpinBox()
-        self.font_size_spin.setRange(1, 50)  # <-- 2. 修改范围为百分比 (1% to 50%)
-        self.font_size_spin.setValue(5)      # <-- 3. 设置一个合理的默认百分比
+        self.font_size_spin.setRange(1, 50)
+        self.font_size_spin.setValue(5)
         self.layout.addWidget(self.font_size_spin)
 
         self.bold_checkbox = QCheckBox("粗体")
@@ -47,10 +55,10 @@ class Controls(QWidget):
         self.layout.addLayout(font_style_layout)
 
         self.image_button = QPushButton("选择图片水印")
-        self.image_path = None
+        # --- 修改：缓存 ImageWatermark 对象而不是路径 ---
+        self.image_watermark_obj: ImageWatermark | None = None
         self.layout.addWidget(self.image_button)
 
-        # --- 新增：模板UI ---
         self.layout.addWidget(QLabel("水印模板"))
         self.template_combo = QComboBox()
         self.layout.addWidget(self.template_combo)
@@ -61,7 +69,6 @@ class Controls(QWidget):
         template_btn_layout.addWidget(self.save_template_btn)
         template_btn_layout.addWidget(self.delete_template_btn)
         self.layout.addLayout(template_btn_layout)
-        # --- 新增结束 ---
 
         self.layout.addWidget(QLabel("水印位置"))
         self.position_buttons = {}
@@ -114,14 +121,12 @@ class Controls(QWidget):
         self.layout.addStretch()
 
         # --- 绑定内部信号 ---
-        # 将所有会改变设置的控件信号，连接到自定义信号的 emit() 方法
         self.text_input.textChanged.connect(self.settingsChanged.emit)
         self.opacity_slider.valueChanged.connect(self.settingsChanged.emit)
         self.font_size_spin.valueChanged.connect(self.settingsChanged.emit)
         self.bold_checkbox.stateChanged.connect(self.settingsChanged.emit)
         self.italic_checkbox.stateChanged.connect(self.settingsChanged.emit)
         
-        # 对于需要打开对话框的按钮，我们在其自定义方法内发射信号
         self.color_button.clicked.connect(self.choose_color)
         self.image_button.clicked.connect(self.choose_image)
         for btn in self.position_buttons.values():
@@ -131,15 +136,25 @@ class Controls(QWidget):
         color = QColorDialog.getColor(QColor(*self.selected_color))
         if color.isValid():
             self.selected_color = (color.red(), color.green(), color.blue())
-            self.settingsChanged.emit() # 只有在成功选择颜色后才发射信号
+            self.settingsChanged.emit()
 
+    # --- 修改：重写 choose_image 方法 ---
     def choose_image(self):
+        """选择水印图片，并直接创建和缓存 ImageWatermark 对象"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "选择水印图片", "", "Images (*.png *.jpg *.bmp *.tiff)"
+            self, "选择水印图片", "", "Images (*.png *.jpg *.jpeg *.bmp *.tiff)"
         )
         if path:
-            self.image_path = path
-            self.settingsChanged.emit() # 只有在成功选择图片后才发射信号
+            try:
+                # 关键：选择后立刻创建对象并缓存
+                self.image_watermark_obj = ImageWatermark(watermark_path=path)
+                print(f"[INFO] 图片水印已加载: {path}")
+                # 发射信号，通知 MainWindow 更新预览
+                self.settingsChanged.emit()
+            except Exception as e:
+                print(f"[ERROR] 加载水印图片失败: {e}")
+                self.image_watermark_obj = None
+    # --- 修改结束 ---
 
     def set_position(self, pos_name: str):
         if self.current_position == pos_name:
@@ -148,17 +163,15 @@ class Controls(QWidget):
         for name, btn in self.position_buttons.items():
             btn.setChecked(name == pos_name)
 
-    # --- 新增方法 ---
     def update_template_list(self, templates: list[str]):
         """更新模板下拉列表"""
         current_selection = self.template_combo.currentText()
-        self.template_combo.blockSignals(True) # 临时阻止信号触发，避免加载时触发 on_template_selected
+        self.template_combo.blockSignals(True)
         self.template_combo.clear()
         self.template_combo.addItems(["- 选择模板 -"] + sorted(templates))
         
-        # 尝试恢复之前的选择
         index = self.template_combo.findText(current_selection)
         if index != -1:
             self.template_combo.setCurrentIndex(index)
             
-        self.template_combo.blockSignals(False) # 恢复信号
+        self.template_combo.blockSignals(False)
