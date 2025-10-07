@@ -1,8 +1,11 @@
 import sys
 import os
+from pathlib import Path
+from PIL import Image
+from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QApplication, QFileDialog
 from ui.image_list import ImageList
 from ui.preview_widget import PreviewWidget
 from ui.controls import Controls
@@ -10,17 +13,14 @@ from watermark.preview import PreviewManager
 from watermark.watermark_text import TextWatermark
 from watermark.watermark_image import ImageWatermark
 from watermark.file_manager import FileManager
-from PIL import Image
-from pathlib import Path
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Photo Watermark App")
-        self.resize(1200, 800)            # 初始大小
-        self.setMinimumSize(1000, 600)    # 最小窗口大小
-
+        self.resize(1200, 800)
+        self.setMinimumSize(1000, 600)
 
         self.central = QWidget()
         self.setCentralWidget(self.central)
@@ -51,6 +51,9 @@ class MainWindow(QMainWindow):
         self.controls.opacity_slider.valueChanged.connect(self.update_preview)
         self.controls.color_button.clicked.connect(self.update_preview)
         self.controls.image_button.clicked.connect(self.update_preview)
+        self.controls.bold_checkbox.stateChanged.connect(self.update_preview)
+        self.controls.italic_checkbox.stateChanged.connect(self.update_preview)
+        self.controls.font_size_spin.valueChanged.connect(self.update_preview)
         self.controls.import_btn.clicked.connect(self.import_images)
         self.controls.export_btn.clicked.connect(self.export_images)
 
@@ -78,9 +81,11 @@ class MainWindow(QMainWindow):
             if text:
                 tw = TextWatermark(
                     text=text,
-                    font_size=32,
+                    font_size=self.controls.font_size_spin.value(),
                     color=self.controls.selected_color,
-                    opacity=self.controls.opacity_slider.value()
+                    opacity=self.controls.opacity_slider.value(),
+                    bold=self.controls.bold_checkbox.isChecked(),
+                    italic=self.controls.italic_checkbox.isChecked()
                 )
                 self.preview_manager.set_text_watermark(tw)
             else:
@@ -120,7 +125,6 @@ class MainWindow(QMainWindow):
         imported_files = self.file_manager.import_files(file_paths)
         for f in imported_files:
             self.image_list.add_image(f)
-        # 默认选中第一张，刷新预览
         if imported_files and not self.image_list.currentItem():
             self.image_list.setCurrentRow(0)
 
@@ -131,6 +135,19 @@ class MainWindow(QMainWindow):
         output_dir = QFileDialog.getExistingDirectory(self, "选择导出文件夹")
         if not output_dir:
             return
+
+        if self.image_list.count() > 0:
+            first_item = self.image_list.item(0)
+            first_image_path = Path(first_item.data(256))
+            if Path(output_dir).resolve() == first_image_path.parent.resolve():
+                from PyQt6.QtWidgets import QMessageBox
+                QMessageBox.warning(
+                    self,
+                    "警告",
+                    "当前选择的导出文件夹与原图片文件夹相同。\n为避免覆盖原图，已取消导出操作。",
+                    QMessageBox.StandardButton.Ok
+                )
+                return
 
         images_to_export = []
         scale_percent = self.controls.scale_spinbox.value() / 100.0
@@ -150,9 +167,11 @@ class MainWindow(QMainWindow):
             if text:
                 tw = TextWatermark(
                     text=text,
-                    font_size=32,
+                    font_size=self.controls.font_size_spin.value(),
                     color=self.controls.selected_color,
-                    opacity=self.controls.opacity_slider.value()
+                    opacity=self.controls.opacity_slider.value(),
+                    bold=self.controls.bold_checkbox.isChecked(),
+                    italic=self.controls.italic_checkbox.isChecked()
                 )
                 img = tw.apply(img)
 

@@ -1,13 +1,13 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QSlider, QPushButton, QColorDialog, QFileDialog,
-    QComboBox, QSpinBox
+    QWidget, QVBoxLayout, QLabel, QLineEdit, QSlider, QPushButton,
+    QColorDialog, QFileDialog, QSpinBox, QHBoxLayout, QCheckBox, QComboBox
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 
 
 class Controls(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font_selection=True):
         super().__init__(parent)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -29,6 +29,23 @@ class Controls(QWidget):
         self.color_button.clicked.connect(self.choose_color)
         self.selected_color = (255, 255, 255)
         self.layout.addWidget(self.color_button)
+
+        # ---------- 字号 ----------
+        self.font_size_label = QLabel("字号：")
+        self.font_size_spin = QSpinBox()
+        self.font_size_spin.setRange(8, 200)
+        self.font_size_spin.setValue(32)
+        self.layout.addWidget(self.font_size_label)
+        self.layout.addWidget(self.font_size_spin)
+
+        # ---------- 样式 ----------
+        self.bold_checkbox = QCheckBox("粗体")
+        self.italic_checkbox = QCheckBox("斜体")
+
+        font_style_layout = QHBoxLayout()
+        font_style_layout.addWidget(self.bold_checkbox)
+        font_style_layout.addWidget(self.italic_checkbox)
+        self.layout.addLayout(font_style_layout)
 
         # 图片水印
         self.image_button = QPushButton("选择图片水印")
