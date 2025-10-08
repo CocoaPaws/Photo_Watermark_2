@@ -1,19 +1,20 @@
 {
-    "text_content": "",
-    "opacity": 139,
+    "text_content": "123",
+    "opacity": 255,
     "color": [
-        0,
-        0,
+        170,
+        85,
         255
     ],
     "relative_font_size": 6,
     "is_bold": true,
     "is_italic": true,
     "image_path": "E:\\documents\\lyy\\GAI\\Photo_Watermark_2\\Photo_Watermark_2\\assets\\logo.png",
-    "position_name": "下中",
+    "image_scale": 151,
+    "position_name": "左中",
     "wm_offset_relative": [
-        -0.4600000000000004,
-        -0.7849999999999995
+        0.11796874999999998,
+        0.012890625
     ],
     "name_rule": "original",
     "custom_str": "_watermarked",

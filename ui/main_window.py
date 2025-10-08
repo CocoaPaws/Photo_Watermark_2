@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Photo Watermark App")
         self.resize(1200, 800)
-        self.setMinimumSize(1000, 600) # 保持一个合理的最小尺寸
+        self.setMinimumSize(1000, 850) # 保持一个合理的最小尺寸
 
         self.central = QWidget()
         self.setCentralWidget(self.central)
@@ -165,6 +165,7 @@ class MainWindow(QMainWindow):
             iw = self.controls.image_watermark_obj
             if iw:
                 iw.opacity = self.controls.opacity_slider.value()
+                iw.scale = self.controls.image_scale_slider.value() / 100.0
                 self.preview_manager.set_image_watermark((iw, scaled_pos))
             else:
                 self.preview_manager.set_image_watermark(None)
@@ -239,6 +240,7 @@ class MainWindow(QMainWindow):
             iw = self.controls.image_watermark_obj
             if iw:
                 iw.opacity = current_settings["opacity"]
+                iw.scale = current_settings.get("image_scale", 15) / 100.0
                 img = iw.apply(img, position=final_pos)
             # --- 修改结束 ---
 
@@ -272,6 +274,7 @@ class MainWindow(QMainWindow):
             "is_bold": self.controls.bold_checkbox.isChecked(),
             "is_italic": self.controls.italic_checkbox.isChecked(),
             "image_path": img_wm_path, # 保存路径
+            "image_scale": self.controls.image_scale_slider.value(),
             "position_name": self.controls.current_position,
             "wm_offset_relative": self.wm_offset_relative,
             "name_rule": self.controls.name_rule_combo.currentText(),
@@ -301,6 +304,12 @@ class MainWindow(QMainWindow):
         else:
             c.image_watermark_obj = None
         
+        c.update_image_watermark_display(img_wm_path)
+        # --- 新增：应用图片水印缩放 ---
+        scale_value = settings.get("image_scale", 15) # 默认15%
+        c.image_scale_slider.setValue(scale_value)
+        c.image_scale_value_label.setText(f"{scale_value} %")
+        # --- 新增结束 ---
         self.wm_offset_relative = settings.get("wm_offset_relative", (0.0, 0.0))
         pos_name = settings.get("position_name", "左上")
         self.controls.set_position(pos_name)
