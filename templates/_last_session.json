@@ -6,15 +6,15 @@
         85,
         255
     ],
-    "relative_font_size": 6,
+    "relative_font_size": 4,
     "is_bold": true,
     "is_italic": true,
     "image_path": "E:\\documents\\lyy\\GAI\\Photo_Watermark_2\\Photo_Watermark_2\\assets\\logo.png",
-    "image_scale": 151,
-    "position_name": "左中",
+    "image_scale": 28,
+    "position_name": "右上",
     "wm_offset_relative": [
-        0.11796874999999998,
-        0.012890625
+        -0.04500000000000004,
+        0.08499999999999998
     ],
     "name_rule": "original",
     "custom_str": "_watermarked",

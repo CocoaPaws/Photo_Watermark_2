@@ -142,13 +142,26 @@ class MainWindow(QMainWindow):
             
             w, h = self.current_original_image.size
             pos_name = self.controls.current_position
+
+            padding = int(min(w, h) * 0.02)
+
             current_absolute_offset = (self.wm_offset_relative[0] * w, self.wm_offset_relative[1] * h)
             
             ref_dim = min(w, h)
             pixel_font_size = ref_dim * (self.controls.font_size_spin.value() / 100.0)
             wm_w = len(self.controls.text_input.text()) * pixel_font_size * 0.6
             wm_h = pixel_font_size
-            base_positions = { "左上": (0, 0), "上中": (w/2-wm_w/2, 0), "右上": (w-wm_w, 0), "左中": (0, h/2-wm_h/2), "中心": (w/2-wm_w/2, h/2-wm_h/2), "右中": (w-wm_w, h/2-wm_h/2), "左下": (0, h-wm_h), "下中": (w/2-wm_w/2, h-wm_h), "右下": (w-wm_w, h-wm_h) }
+            base_positions = {
+                "左上": (padding * 5, padding),
+                "上中": (w/2 - wm_w/2, padding),
+                "右上": (w - wm_w - padding, padding),
+                "左中": (padding * 5, h/2 - wm_h/2),
+                "中心": (w/2 - wm_w/2, h/2 - wm_h/2),
+                "右中": (w - wm_w - padding, h/2 - wm_h/2),
+                "左下": (padding * 5, h - wm_h - padding),
+                "下中": (w/2 - wm_w/2, h - wm_h - padding),
+                "右下": (w - wm_w - padding, h - wm_h - padding),
+            }
             base_pos = base_positions.get(pos_name, (0, 0))
             self.current_wm_pos = (base_pos[0] + current_absolute_offset[0], base_pos[1] + current_absolute_offset[1])
             scaled_pos = (int(self.current_wm_pos[0] * self.preview_scale_ratio), int(self.current_wm_pos[1] * self.preview_scale_ratio))
@@ -223,12 +236,23 @@ class MainWindow(QMainWindow):
                 img = img.resize(new_size, Image.Resampling.LANCZOS)
             
             w, h = img.size
+            padding = int(min(w, h) * 0.02) 
             absolute_offset = (relative_offset[0] * w, relative_offset[1] * h)
             ref_dim = min(w, h)
             pixel_font_size = ref_dim * (current_settings["relative_font_size"] / 100.0)
             wm_w = len(current_settings["text_content"]) * pixel_font_size * 0.6
             wm_h = pixel_font_size
-            base_positions = { "左上": (0, 0), "上中": (w/2-wm_w/2, 0), "右上": (w-wm_w, 0), "左中": (0, h/2-wm_h/2), "中心": (w/2-wm_w/2, h/2-wm_h/2), "右中": (w-wm_w, h/2-wm_h/2), "左下": (0, h-wm_h), "下中": (w/2-wm_w/2, h-wm_h), "右下": (w-wm_w, h-wm_h) }
+            base_positions = {
+                "左上": (padding * 5, padding),
+                "上中": (w/2 - wm_w/2, padding),
+                "右上": (w - wm_w - padding, padding),
+                "左中": (padding * 5, h/2 - wm_h/2),
+                "中心": (w/2 - wm_w/2, h/2 - wm_h/2),
+                "右中": (w - wm_w - padding, h/2 - wm_h/2),
+                "左下": (padding * 5, h - wm_h - padding),
+                "下中": (w/2 - wm_w/2, h - wm_h - padding),
+                "右下": (w - wm_w - padding, h - wm_h - padding),
+            }
             base_pos = base_positions.get(pos_name, (0, 0))
             final_pos = (base_pos[0] + absolute_offset[0], base_pos[1] + absolute_offset[1])
             
