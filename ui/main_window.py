@@ -65,10 +65,11 @@ class MainWindow(QMainWindow):
         self.image_list.currentItemChanged.connect(self.update_preview)
         self.controls.settingsChanged.connect(self.update_preview)
         self.controls.import_btn.clicked.connect(self.import_images)
+        self.controls.import_folder_btn.clicked.connect(self.import_folder) # <-- 新增信号连接
         self.controls.export_btn.clicked.connect(self.export_images)
         self.controls.save_template_btn.clicked.connect(self.save_template)
         self.controls.delete_template_btn.clicked.connect(self.delete_template)
-        self.controls.template_combo.currentIndexChanged.connect(self.on_template_selected)
+        self.controls.template_combo.activated.connect(self.on_template_selected)
         for pos_name, btn in self.controls.position_buttons.items():
             btn.clicked.connect(lambda checked, name=pos_name: self.set_watermark_position(name))
         self.image_list.setFileDroppedCallback(self.handle_import_files)
@@ -199,7 +200,26 @@ class MainWindow(QMainWindow):
         filter_str = "Images (*.png *.jpg *.jpeg *.bmp *.tiff)"
         files, _ = QFileDialog.getOpenFileNames(self, "选择图片", "", filter_str)
         if files: self.handle_import_files(files)
+    # --- 新增：导入文件夹的方法 ---
+    def import_folder(self):
+        """弹出对话框让用户选择文件夹，并导入其中的图片"""
+        folder_path = QFileDialog.getExistingDirectory(
+            self,
+            "选择要导入的文件夹",
+            "",
+            QFileDialog.Option.DontUseNativeDialog
+        )
+        
+        if folder_path:
+            # 使用 FileManager 中已经存在的方法来获取所有图片路径
+            image_paths_in_folder = self.file_manager.import_folder(folder_path)
+            
+            if not image_paths_in_folder:
+                QMessageBox.information(self, "提示", "所选文件夹中未找到支持的图片格式。")
+                return
 
+            # 将找到的图片路径列表交给通用的处理函数
+            self.handle_import_files(image_paths_in_folder)
     def handle_import_files(self, file_paths):
         imported_files = self.file_manager.import_files(file_paths)
         for f in imported_files:

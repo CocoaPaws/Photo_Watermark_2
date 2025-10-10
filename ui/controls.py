@@ -137,9 +137,15 @@ class Controls(QWidget):
         self.scale_spinbox.setRange(10, 500)
         self.scale_spinbox.setValue(100)
         self.layout.addWidget(self.scale_spinbox)
-        self.import_btn = QPushButton("导入图片")
         self.export_btn = QPushButton("批量导出")
-        self.layout.addWidget(self.import_btn)
+
+        import_layout = QHBoxLayout()
+        self.import_btn = QPushButton("导入图片")
+        self.import_folder_btn = QPushButton("导入文件夹") # 新增按钮
+        import_layout.addWidget(self.import_btn)
+        import_layout.addWidget(self.import_folder_btn)
+        self.layout.addLayout(import_layout)
+        
         self.layout.addWidget(self.export_btn)
         self.layout.addStretch()
 

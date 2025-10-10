@@ -1,24 +1,24 @@
 {
-    "text_content": "123",
+    "text_content": "test测试。。。",
     "opacity": 255,
     "color": [
         170,
         85,
-        255
+        127
     ],
-    "relative_font_size": 4,
+    "relative_font_size": 6,
     "is_bold": true,
     "is_italic": true,
-    "image_path": "E:\\documents\\lyy\\GAI\\Photo_Watermark_2\\Photo_Watermark_2\\assets\\logo.png",
-    "image_scale": 28,
-    "position_name": "右上",
+    "image_path": null,
+    "image_scale": 15,
+    "position_name": "中心",
     "wm_offset_relative": [
-        -0.04500000000000004,
-        0.08499999999999998
+        0.12968750000000004,
+        0.19570312499999995
     ],
     "name_rule": "original",
     "custom_str": "_watermarked",
-    "output_format": "JPEG",
-    "jpeg_quality": 12,
-    "scale_percent": 50
+    "output_format": "PNG",
+    "jpeg_quality": 90,
+    "scale_percent": 100
 }
